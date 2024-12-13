@@ -1,29 +1,34 @@
+from pathlib import Path
 import click
+import json
 
-from ingredients import addIngredient
+from commands import addIngredient, addRecipe, addInstruction, view
+from recipeBook import RecipeBook
 
-@click.group()
-def recipeManager():
-    pass
+@click.group(invoke_without_command=True, chain=True)
+@click.pass_context
+def recipeManager(ctx):
+    book_file = Path("book.json")
+    if book_file.is_file():
+        with open("book.json", 'r') as data:
+            json_string = json.load(data)
+            book = json.loads(json_string)
+            recipeBook = RecipeBook(**book)
+            ctx.book = recipeBook
+    else:
+        recipeBook = RecipeBook()
+        ctx.book = recipeBook
+        recipeBook.write_book()
 
-@recipeManager.command()
-@click.option('--count', default=1, help='Number of greetings.')
-@click.option('--name', prompt='Recipe name',
-              help='The recipe name.')
 
-def addRecipe(count, name):
-    
-    for x in range(count):
-        click.echo(f"Hello {name}!")
-
-
-# @recipeManager.command()
-# @click.option('--recipe_name', prompt='Recipe name:', help='The recipe to add this ingrdient to')
-# @click.option('--ingredient', prompt='Ingredient name:', help='The ingredient to add')
-# def addIngredient(recipe_name):
-#     click.echo(f"added ingredient to {recipe_name}")
-
+recipeManager.add_command(addRecipe)
 recipeManager.add_command(addIngredient)
+recipeManager.add_command(addInstruction)
+recipeManager.add_command(view)
 
-if __name__ == '__main__':
+
+def main():
     recipeManager()
+    
+if __name__ == '__main__':
+    main()
